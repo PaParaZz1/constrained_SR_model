@@ -2,6 +2,7 @@ import os
 import sys
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Variable
 import math
 import numpy as np
@@ -30,11 +31,10 @@ class h_swish(nn.Module):
         return out * x
 
 class ShuffleBlock(nn.Module):
-'''keep downsample None'''
-    def __init__(self, inplanes, planes, stride=1,activation = 'relu', downsample=None):
+    def __init__(self, inplanes, planes, stride=1, activation='relu', downsample=None):
         super(ShuffleBlock, self).__init__()
         self.downsample = downsample
-
+        
         if not self.downsample: #---if not downsample, then channel split, so the channel become half
             inplanes = inplanes // 2
             planes = planes // 2
@@ -65,7 +65,7 @@ class ShuffleBlock(nn.Module):
         channels = features.size()[1] 
         index = torch.from_numpy(np.asarray([i for i in range(channels)]))
         index = index.view(-1, g).t().contiguous()
-        index = index.view(-1).cuda()
+        index = index.view(-1) #.cuda()
         features = features[:, index]
         return features
 
@@ -81,7 +81,7 @@ class ShuffleBlock(nn.Module):
         x2 = self.conv1x1_1(x2)
         #x2 = self.conv1x1_1_bn(x2)
         x2 = self.activation(x2)
-         
+        
         x2 = self.dwconv3x3(x2)
         #x2 = self.dwconv3x3_bn(x2)
     
@@ -101,6 +101,6 @@ class ShuffleBlock(nn.Module):
 
 if __name__ == "__main__":
     x = torch.randn(4, 64, 400, 500)
-    block = ShuffleBlock(64, 64, 'h-swish')
+    block = ShuffleBlock(64, 64, activation='h-swish')
     print(x.shape)
     print(block(x).shape)
