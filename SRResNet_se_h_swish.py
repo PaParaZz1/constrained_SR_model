@@ -40,11 +40,6 @@ def make_layer(block, n_layers):
 
 # ----
 # Se Layer: refer to https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
-# TODO: weight initialization ?
-# TODO relu / h_swish
-# ----
-
-
 class SELayer(nn.Module):
     def __init__(self, channel, reduction=16, activation='relu'):
         super(SELayer, self).__init__()
@@ -214,19 +209,15 @@ class MSRResNet_v1(nn.Module):
         fea = self.activation(self.conv_first(x))
         out = self.recon_trunk(fea)
 
-        #print('[Debug] 1')
         if self.upscale == 4:
             out = self.activation(self.pixel_shuffle(self.upconv1(out)))
             out = self.activation(self.pixel_shuffle(self.upconv2(out)))
         elif self.upscale == 3 or self.upscale == 2:
             out = self.activation(self.pixel_shuffle(self.upconv1(out)))
 
-        #print('[Debug] 2')
         out = self.conv_last(self.activation(self.HRconv(out)))
-        #print('[Debug] 3')
         base = F.interpolate(x, scale_factor=self.upscale,
                              mode='bilinear', align_corners=False)
-        #print('[Debug] 4')
         out += base
         return out
 
